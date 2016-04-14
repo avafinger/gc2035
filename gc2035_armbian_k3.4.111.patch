@@ -1,5 +1,5 @@
---- a/h3-wip/drivers/media/video/sunxi-vfe/device/gc2035.c	2016-04-02 14:52:32.000000000 -0300
-+++ b/h3-wip/drivers/media/video/sunxi-vfe/device/gc2035.c	2016-04-11 19:08:17.000000000 -0300
+--- a/drivers/media/video/sunxi-vfe/device/gc2035.c	2016-04-02 14:52:32.000000000 -0300
++++ b/drivers/media/video/sunxi-vfe/device/gc2035.c	2016-04-11 19:08:17.000000000 -0300
 @@ -14,16 +14,29 @@
  #include <media/v4l2-mediabus.h>
  #include <linux/io.h>
