@@ -12,6 +12,7 @@ hres=1 => 800x600|1600x1200 and 10 fps (good light condition), 800x600 good qual
 
 hres=2 => 320x240|640x480|800x600 and 20 fps (good light condition), 640x480 medium quality
 
+hres=3 => 320x240|352x288|640x480 and 15 fps (good light condition), low quality, cropped to this window sizes
 
 Loading the driver:
 
@@ -40,6 +41,12 @@ modprobe -r -v vfe_v4l2
 
 modprobe -r -v gc2035
 
+
+Tip
+===
+
+For best quality/performance, load the driver with this: modprobe gc2035 hres=0 mclk=34
+The drawback is you should not change window size on the fly (without unloading the driver)
 
 Now load the drivers with the new parameters.
 
