@@ -1,5 +1,5 @@
 --- a/drivers/media/video/sunxi-vfe/device/gc2035.c	2016-04-02 14:52:32.000000000 -0300
-+++ b/drivers/media/video/sunxi-vfe/device/gc2035.c	2016-04-11 19:08:17.000000000 -0300
++++ b/drivers/media/video/sunxi-vfe/device/gc2035.c	2016-04-18 15:10:33.631712737 -0300
 @@ -14,16 +14,29 @@
  #include <media/v4l2-mediabus.h>
  #include <linux/io.h>
@@ -10,7 +10,7 @@
 +static unsigned int hres = 0;
 +module_param(hres, uint, 0);
 +MODULE_PARM_DESC(hres,
-+"hres=0 (640x480|1280x720|1600x1200 - 15 FPS), hres=1 (800x600|1600x1200 - 10 FPS), hres=2 (320x240|640x480|800x600 - 20 FPS) (default=0)");
++"hres=0 (640x480|1280x720|1600x1200 - 15 FPS), hres=1 (800x600|1600x1200 - 10 FPS), hres=2 (320x240|640x480|800x600 - 20 FPS), hres=3 (320x240|352x288|640x480 - 15 FPS) (default=0)");
 +
 +static unsigned int mclk = 0;
 +module_param(mclk, uint, 0);
@@ -309,7 +309,7 @@
  {
  {0xfe,0x00},
  {0xb6,0x03},
-@@ -1497,103 +1621,1598 @@ static struct regval_list sensor_svga_re
+@@ -1497,103 +1621,1609 @@ static struct regval_list sensor_svga_re
  {0x98,0x20},
  };
  
@@ -363,7 +363,7 @@
 +{0xed , 0x06},//04 
 +{0xee , 0x62},//60 
 +{0xef , 0x92},//90 
- 
++
 +///////////analog/////////////
 +{0x0a , 0x00}, //row start
 +{0x0b , 0x10}, //row start
@@ -373,9 +373,8 @@
 +{0x0f , 0x06}, //Window setting
 +{0x10 , 0x58}, //40/50/58
 +{0x17 , 0x14}, //[0]mirror [1]flip [4]better colour
- 
- 
--	{0xfa , 0x00}, 
++
++
 +//{0x18 , 0x0a}, //0a 2012.10.26
 +{0x18 , 0x0f}, //0a 2012.10.26
 +{0x19 , 0x0a}, //AD pipe number
@@ -531,7 +530,7 @@
 +{0xe4 , 0x44},
 +{0xe5 , 0xe5},
 +{0xfe , 0x00},
-+
+ 
 +///////awb start ////////////////
 +//AWB clear
 +{0xfe , 0x01},
@@ -1101,8 +1100,8 @@
 +{0x97,0x03},
 +{0x98,0x20},
 +};
- 
-+#if 0
++
++#if 1
 +static struct regval_list sensor_default_regs_hres3[] =
 +{
 +	{0xfe, 0x80},
@@ -1150,21 +1149,11 @@
 +	{0x0f, 0x06}, //Window setting
 +	{0x10, 0x58}, 
 +	{0x17, 0x14}, //[0]mirror [1]flip
- 
--	{0xfe , 0x03},
--	{0x42 , 0x00}, 
--	{0x43 , 0x05}, //output buf width  280*2=500
--	{0x41 , 0x02}, // delay
--	{0x40 , 0x40}, //fifo half full trig
--	{0x17 , 0x00}, //widv is 0
- 
--	{0xfe , 0x00},
--	{0xc8 , 0x55}, 
--	{0xb6 , 0x03},//aec on
--};
++
++
 +	{0x18, 0x0e}, //sdark 4 row in even frame??
 +	{0x19, 0x0c}, //AD pipe number
- 
++
 +	/*
 +	///  Ã«´Ì ÏÖÏó
 +	{0x18,0x0a}, //sdark 4 row in even frame??
@@ -1181,21 +1170,7 @@
 +	{0x22 , 0xf0}, //[3:0]vref
 +	{0x23 , 0xc3}, //f3//ADC_r
 +	{0x24 , 0x17}, //pad drive  16
- 
--////1280*720---init---///
--static struct regval_list Gc2015_sensor_hd720_regs[] = 
--{
--{0xfe , 0x00},
--{0x05, 0x01},
--{0x06, 0x9e},
--{0x07, 0x01},
--{0x08, 0x6d},  
--{0x0a , 0xf0}, //row start
--{0x0c , 0xa0}, //col start 
--{0x0d , 0x02},
--{0x0e , 0xd8},
--{0x0f , 0x05}, //Window setting
--{0x10 , 0x18},   
++
 +	//AEC
 +	{0xfe, 0x01},
 +	{0x11, 0x20},//AEC_out_slope , 0x
@@ -1205,17 +1180,7 @@
 +	{0x0b, 0x10},//
 +	{0x13, 0x75},//y_target
 +	{0xfe, 0x00},
- 
--{0xfe, 0x01},
--{0x27, 0x00},
--{0x28, 0xd9},
--{0x29, 0x04},
--{0x2a, 0x3d},//18fps
--{0x2b, 0x06},
--{0x2c, 0xc8},//12.5fps
--{0x2d, 0x0a},
--{0x2e, 0x2c},//8fps
--{0x3e, 0x40},//0x40 0x00
++
 +#if 0
 +	{0x05 , 0x01},//hb
 +	{0x06 , 0x11},
@@ -1251,23 +1216,12 @@
 +	{0x2f , 0x08},//  level 3 7.5
 +	{0x30 , 0x20},  
 +#endif
- 
--//measure window
--{0xfe, 0x00},
--{0xec, 0x04},
--{0xed, 0x04},
--{0xee, 0x50},
--{0xef, 0x58},
++
 +	{0xfe , 0x00},
 +	{0xfe , 0x00},  //0x , 0x , 0x , 0x , 0x 
 +	{0xb6 , 0x03}, //AEC enable
 +	{0xfe , 0x00},
- 
--{0x90 , 0x01},  //crop enable
--{0x95 , 0x02},
--{0x96 , 0xd0},
--{0x97 , 0x05},
--{0x98 , 0x00},   
++
 +	/////////BLK//////
 +	{0x3f, 0x00}, //prc close
 +	{0x40, 0x77},//
@@ -1438,13 +1392,7 @@
 +	{0xe5, 0xe5},
 +	{0xfe, 0x00},
  
--{0xfe , 0x03},
--{0x42 , 0x80}, 
--{0x43 , 0x06}, //output buf width
--{0x41 , 0x00}, // delay
--{0x40 , 0x00}, //fifo half full trig
--{0x17 , 0x01}, //widv 
--{0xfe , 0x00},
+-	{0xfa , 0x00}, 
 +	///////awb start ////////////////
 +	//AWB clear
 +	{0xfe, 0x01},
@@ -1713,8 +1661,6 @@
 +	{0x4e, 0x20},
 +	{0x4f, 0x01},
  
--{0x99, 0x11},
--{0xc8, 0x00},
 +	/////awb////
 +	{0xfe, 0x01},
 +	{0x50, 0x88},//c0//[6]green mode
@@ -1846,7 +1792,12 @@
 +	{0xb6 , 0x03},
 +	{0xfa , 0x00},
  
--{0xfa, 0x11},
+-	{0xfe , 0x03},
+-	{0x42 , 0x00}, 
+-	{0x43 , 0x05}, //output buf width  280*2=500
+-	{0x41 , 0x02}, // delay
+-	{0x40 , 0x40}, //fifo half full trig
+-	{0x17 , 0x00}, //widv is 0
 +	{0xc8, 0x00},//close scaler
 +	{0x99, 0x22},// 1/2 subsample
 +	{0x9a, 0x06},
@@ -1893,7 +1844,9 @@
 +	{0xfe,0x00},  
 +	{0x87,0xb0},
  
--{0xff, 0xff},
+-	{0xfe , 0x00},
+-	{0xc8 , 0x55}, 
+-	{0xb6 , 0x03},//aec on
 +       //// small  RGB gamma////
 +	{0xfe, 0x02},
 +	{0x15, 0x0b},
@@ -1961,8 +1914,70 @@
 +  {0xdd , 0x00},
 +  {0xfe , 0x00},
 +#endif    
+ };
+ 
+-
+-////1280*720---init---///
+-static struct regval_list Gc2015_sensor_hd720_regs[] = 
++/* 1600x1200 UXGA,5fps*/
++static struct regval_list sensor_uxga_regs_hres3[] =
+ {
+-{0xfe , 0x00},
+-{0x05, 0x01},
+-{0x06, 0x9e},
+-{0x07, 0x01},
+-{0x08, 0x6d},  
+-{0x0a , 0xf0}, //row start
+-{0x0c , 0xa0}, //col start 
+-{0x0d , 0x02},
+-{0x0e , 0xd8},
+-{0x0f , 0x05}, //Window setting
+-{0x10 , 0x18},   
+-
+-{0xfe, 0x01},
+-{0x27, 0x00},
+-{0x28, 0xd9},
+-{0x29, 0x04},
+-{0x2a, 0x3d},//18fps
+-{0x2b, 0x06},
+-{0x2c, 0xc8},//12.5fps
+-{0x2d, 0x0a},
+-{0x2e, 0x2c},//8fps
+-{0x3e, 0x40},//0x40 0x00
+-
+-//measure window
+-{0xfe, 0x00},
+-{0xec, 0x04},
+-{0xed, 0x04},
+-{0xee, 0x50},
+-{0xef, 0x58},
+-
+-{0x90 , 0x01},  //crop enable
+-{0x95 , 0x02},
+-{0x96 , 0xd0},
+-{0x97 , 0x05},
+-{0x98 , 0x00},   
+-
+-
+-{0xfe , 0x03},
+-{0x42 , 0x80}, 
+-{0x43 , 0x06}, //output buf width
+-{0x41 , 0x00}, // delay
+-{0x40 , 0x00}, //fifo half full trig
+-{0x17 , 0x01}, //widv 
+-{0xfe , 0x00},
 +};
-+
+ 
+-{0x99, 0x11},
+-{0xc8, 0x00},
++/* 800x600 SVGA,15fps*/
++static struct regval_list sensor_svga_regs_hres3[] =
++{
++};
+ 
+-{0xfa, 0x11},
+ 
+-{0xff, 0xff},
 +/* 640x480 VGA,15fps*/
 +static struct regval_list sensor_vga_regs_hres3[] =
 +{
@@ -1982,7 +1997,7 @@
  
  /*
   * The white balance settings
-@@ -2311,6 +3930,8 @@ static int sensor_write_array(struct v4l
+@@ -2311,6 +3941,8 @@ static int sensor_write_array(struct v4l
  	
    if(!regs)
    	return -EINVAL;
@@ -1991,7 +2006,7 @@
    
    while(i<array_size)
    {
-@@ -2894,7 +4515,7 @@ static int sensor_power(struct v4l2_subd
+@@ -2894,7 +4526,7 @@ static int sensor_power(struct v4l2_subd
  		vfe_gpio_write(sd,PWDN, CSI_GPIO_LOW);
  		usleep_range(10000,12000);
  		//active mclk before stadby out
@@ -2000,7 +2015,7 @@
  		vfe_set_mclk(sd,ON);
  		usleep_range(10000,12000);
  		vfe_dev_print("enable oe!\n");
-@@ -2906,7 +4527,7 @@ static int sensor_power(struct v4l2_subd
+@@ -2906,7 +4538,7 @@ static int sensor_power(struct v4l2_subd
  		vfe_dev_dbg("CSI_SUBDEV_PWR_ON\n");
  		vfe_gpio_set_status(sd,PWDN,1);//set the gpio to output
  		vfe_gpio_set_status(sd,RESET,1);//set the gpio to output
@@ -2009,7 +2024,7 @@
  		vfe_set_mclk(sd,ON);
  		vfe_gpio_write(sd,PWDN, CSI_GPIO_LOW);
  		vfe_gpio_write(sd,RESET, CSI_GPIO_LOW);
-@@ -2999,20 +4620,6 @@ static int sensor_detect(struct v4l2_sub
+@@ -2999,20 +4631,6 @@ static int sensor_detect(struct v4l2_sub
  	return 0;
  }
  
@@ -2030,7 +2045,7 @@
  
  static int sensor_g_exif(struct v4l2_subdev *sd, struct sensor_exif_attribute *exif)
  {
-@@ -3111,18 +4718,16 @@ static struct sensor_format_struct {
+@@ -3111,18 +4729,16 @@ static struct sensor_format_struct {
  /*
   * Then there is the issue of window sizes.  Try to capture the info here.
   */
@@ -2052,7 +2067,7 @@
      .set_size   = NULL,
    },
    /* 720p */
-@@ -3131,8 +4736,57 @@ sensor_win_sizes[] = {
+@@ -3131,8 +4747,103 @@ sensor_win_sizes[] = {
      .height     = HD720_HEIGHT,
      .hoffset    = 0,
      .voffset    = 0,
@@ -2109,15 +2124,14 @@
 +    .voffset    = 0,
 +    .regs       = sensor_uxga_regs_hres2,
 +    .regs_size  = ARRAY_SIZE(sensor_uxga_regs_hres2),
-     .set_size   = NULL,
-   },
-   /* SVGA */
-@@ -3141,23 +4795,70 @@ sensor_win_sizes[] = {
-     .height     = SVGA_HEIGHT,
-     .hoffset    = 0,
-     .voffset    = 0,
--    .regs       = sensor_svga_regs,
--    .regs_size  = ARRAY_SIZE(sensor_svga_regs),
++    .set_size   = NULL,
++  },
++  /* SVGA */
++  {
++    .width      = SVGA_WIDTH,
++    .height     = SVGA_HEIGHT,
++    .hoffset    = 0,
++    .voffset    = 0,
 +    .regs       = sensor_svga_regs_hres2,
 +    .regs_size  = ARRAY_SIZE(sensor_svga_regs_hres2),
 +    .set_size   = NULL,
@@ -2140,24 +2154,44 @@
 +    .voffset    = 0,
 +    .regs       = sensor_qvga_regs_hres2,
 +    .regs_size  = ARRAY_SIZE(sensor_qvga_regs_hres2),
-     .set_size   = NULL,
-   },
++    .set_size   = NULL,
++  },
 +
 +};
 +
-+#if 0
++#if 1
 +static struct sensor_win_size 
 +sensor_win_sizes_hres3[] = {
++  /* UXGA */
++  {
++    .width      = UXGA_WIDTH,
++    .height     = UXGA_HEIGHT,
++    .hoffset    = 0,
++    .voffset    = 0,
++    .regs       = sensor_uxga_regs_hres3,
++    .regs_size  = ARRAY_SIZE(sensor_uxga_regs_hres3),
+     .set_size   = NULL,
+   },
+   /* SVGA */
+@@ -3141,8 +4852,8 @@ sensor_win_sizes[] = {
+     .height     = SVGA_HEIGHT,
+     .hoffset    = 0,
+     .voffset    = 0,
+-    .regs       = sensor_svga_regs,
+-    .regs_size  = ARRAY_SIZE(sensor_svga_regs),
++    .regs       = sensor_svga_regs_hres3,
++    .regs_size  = ARRAY_SIZE(sensor_svga_regs_hres3),
+     .set_size   = NULL,
+   },
    /* VGA */
-   {
-     .width      = VGA_WIDTH,
+@@ -3151,13 +4862,34 @@ sensor_win_sizes[] = {
      .height     = VGA_HEIGHT,
      .hoffset    = 0,
      .voffset    = 0,
 -    .regs       = sensor_vga_regs,
 -    .regs_size  = ARRAY_SIZE(sensor_vga_regs),
-+    .regs       = sensor_vga_regs_hres2,
-+    .regs_size  = ARRAY_SIZE(sensor_vga_regs_hres2),
++    .regs       = sensor_vga_regs_hres3,
++    .regs_size  = ARRAY_SIZE(sensor_vga_regs_hres3),
 +    .set_size   = NULL,
 +  },
 +  /* CIF */
@@ -2166,8 +2200,8 @@
 +    .height     = CIF_HEIGHT,
 +    .hoffset    = 0,
 +    .voffset    = 0,
-+    .regs       = sensor_qvga_regs_hres2,
-+    .regs_size  = ARRAY_SIZE(sensor_qvga_regs_hres2),
++    .regs       = sensor_cif_regs_hres3,
++    .regs_size  = ARRAY_SIZE(sensor_qvga_regs_hres3),
 +    .set_size   = NULL,
 +  },  
 +  /* QVGA */
@@ -2176,8 +2210,8 @@
 +    .height     = QVGA_HEIGHT,
 +    .hoffset    = 0,
 +    .voffset    = 0,
-+    .regs       = sensor_qvga_regs_hres2,
-+    .regs_size  = ARRAY_SIZE(sensor_qvga_regs_hres2),
++    .regs       = sensor_qvga_regs_hres3,
++    .regs_size  = ARRAY_SIZE(sensor_qvga_regs_hres3),
      .set_size   = NULL,
    },
  };
@@ -2188,7 +2222,7 @@
  
  static int sensor_enum_fmt(struct v4l2_subdev *sd, unsigned index,
                   enum v4l2_mbus_pixelcode *code)
-@@ -3172,12 +4873,14 @@ static int sensor_enum_fmt(struct v4l2_s
+@@ -3172,12 +4904,14 @@ static int sensor_enum_fmt(struct v4l2_s
  static int sensor_enum_size(struct v4l2_subdev *sd,
                              struct v4l2_frmsizeenum *fsize)
  {
@@ -2206,7 +2240,7 @@
    
    return 0;
  }
-@@ -3211,13 +4914,13 @@ static int sensor_try_fmt_internal(struc
+@@ -3211,13 +4945,13 @@ static int sensor_try_fmt_internal(struc
     * Round requested image size down to the nearest
     * we support, but not below the smallest.
     */
@@ -2226,7 +2260,17 @@
    if (ret_wsize != NULL)
      *ret_wsize = wsize;
    /*
-@@ -3267,25 +4970,22 @@ static int sensor_s_fmt(struct v4l2_subd
+@@ -3248,6 +4982,9 @@ static int sensor_g_mbus_config(struct v
+ /*
+  * Set a format.
+  */
++static unsigned char shutter_l = 0;
++static unsigned char shutter_h = 0;
++
+ static int sensor_s_fmt(struct v4l2_subdev *sd, 
+              struct v4l2_mbus_framefmt *fmt)//linux-3.0
+ {
+@@ -3267,25 +5004,30 @@ static int sensor_s_fmt(struct v4l2_subd
  	if (ret)
  		return ret;
  
@@ -2249,7 +2293,15 @@
 -	//	printk(" shutter = [%x]\n", shutter);		
 -	}
 -#endif
++#if 0
 +    if (hres == 0)  {
++        if ((wsize->width == VGA_WIDTH) && (wsize->height == VGA_HEIGHT)) {
++            nMCLK = (34*1000*1000);
++            nSENSOR_FRAME_RATE = 25;
++        }
++    }
++#endif    
++    if (hres == 1 || hres == 2)  {
 +        if ((wsize->width == UXGA_WIDTH) && (wsize->height == UXGA_HEIGHT)) {
 +            //	printk(" read  2035 exptime 11111111\n" );
 +            sensor_write(sd, 0xfe, 0x00);
@@ -2268,7 +2320,7 @@
  
  	sensor_write_array(sd, sensor_fmt->regs , sensor_fmt->regs_size);
  
-@@ -3306,49 +5006,47 @@ static int sensor_s_fmt(struct v4l2_subd
+@@ -3306,49 +5048,118 @@ static int sensor_s_fmt(struct v4l2_subd
  
   //////////
  
@@ -2331,8 +2383,9 @@
 +        if((wsize->width == UXGA_WIDTH) && (wsize->height == UXGA_HEIGHT))     {
 +            //printk(" write  2035 exptime 22222222\n" );
 +            sensor_write(sd, 0xfe, 0x00);
-+            shutter= shutter /2;	// 2
-+            if(shutter < 1) shutter = 1;
++            shutter= shutter / 2;	// 2
++            if(shutter < 1)
++               shutter = 1;
 +            val = ((shutter>>8)&0xff); 
 +             //  printk(" write0x03 = [%x]\n", regs.value[0]);
 +            sensor_write(sd, 0x03, val);
@@ -2348,14 +2401,84 @@
 -	     mdelay(300);
 +             sensor_write(sd, 0xb6, 0x03);  // AEC ON
 +             mdelay(300);
++             nSENSOR_FRAME_RATE = 8;
          }
 -
 - 
 +    }
++    if (hres == 3) {
++        if ((wsize->width >= UXGA_WIDTH) && (wsize->height >= UXGA_HEIGHT))     {
++            sensor_write(sd, 0xfe, 0x01);
++            sensor_write(sd, 0x21, 0xdf);
++            sensor_write(sd, 0xfe, 0x00);
++            sensor_write(sd, 0xb6, 0x02);  // AEC OFF
++            sensor_read(sd, 0x03, &val);
++            shutter_l = val;
++            temp |= (val<< 8);
++            sensor_read(sd, 0x04, &val);
++            shutter_h = val;
++            temp |= (val & 0xff);
++            shutter=temp;
++            sensor_write(sd, 0xfe, 0x00);
++            sensor_write(sd, 0xc8, 0x00);
++            sensor_write(sd, 0xfa, 0x11);
++            sensor_write(sd, 0x90, 0x01);
++            sensor_write(sd, 0x95, 0x04);
++            sensor_write(sd, 0x96, 0xb2);
++            sensor_write(sd, 0x97, 0x06);
++            sensor_write(sd, 0x98, 0x40);
++            sensor_write(sd, 0x99, 0x11);
++            sensor_write(sd, 0x9a, 0x06);
++            sensor_write(sd, 0x9b, 0x00);
++            sensor_write(sd, 0x9e, 0x00);
++            sensor_write(sd, 0xa0, 0x00);
++            sensor_write(sd, 0xa1, 0x00);
++            sensor_write(sd, 0xa2, 0x00);
++            shutter= shutter / 2;	// 2
++            if(shutter < 1)
++               shutter = 1;
++            val = ((shutter>>8)&0xff); 
++             //  printk(" write0x03 = [%x]\n", regs.value[0]);
++            sensor_write(sd, 0x03, val);
++            val = (shutter&0xff); 
++            sensor_write(sd, 0x04, val);
++            nSENSOR_FRAME_RATE = 8;
++            mdelay(130);
++        } else {
++            sensor_write(sd, 0xfe, 0x01);
++            sensor_write(sd, 0x21, 0xbf);
++            sensor_write(sd, 0xfe, 0x00);
++            
++            sensor_write(sd, 0x03, shutter_l);
++            sensor_write(sd, 0x04, shutter_h);
++
++            sensor_write(sd, 0xb6, 0x03);
++            sensor_write(sd, 0xfa, 0x00);
++            sensor_write(sd, 0xc8, 0x00);
++            sensor_write(sd, 0x99, 0x22);
++            sensor_write(sd, 0x9a, 0x07);
++            sensor_write(sd, 0x9b, 0x00);
++            sensor_write(sd, 0x9c, 0x00);
++            sensor_write(sd, 0x9d, 0x00);
++            sensor_write(sd, 0x9e, 0x00);
++            sensor_write(sd, 0x9f, 0x00);
++
++            sensor_write(sd, 0xa1, 0x00);
++            sensor_write(sd, 0xa2, 0x00);
++            sensor_write(sd, 0x90, 0x01); // crop enable
++            sensor_write(sd, 0x94, 0x02);
++            sensor_write(sd, 0x95, 0x02);
++            sensor_write(sd, 0x96, 0x5a);
++            sensor_write(sd, 0x97, 0x03);
++            sensor_write(sd, 0x98, 0x22);
++            nSENSOR_FRAME_RATE = 15;
++            mdelay(50);
++        }
++    }
  #endif	
  /////////////////////////////
  
-@@ -3377,53 +5075,49 @@ static int sensor_g_parm(struct v4l2_sub
+@@ -3377,53 +5188,55 @@ static int sensor_g_parm(struct v4l2_sub
  	memset(cp, 0, sizeof(struct v4l2_captureparm));
  	cp->capability = V4L2_CAP_TIMEPERFRAME;
  	cp->timeperframe.numerator = 1;
@@ -2371,6 +2494,12 @@
 +    if (hres < 2) {
 +        if (info->width > SVGA_WIDTH && info->height > SVGA_HEIGHT) {
 +            cp->timeperframe.denominator = nSENSOR_FRAME_RATE/2;
++        }
++    } else {
++        if (hres == 3) {
++            if (info->width > SVGA_WIDTH && info->height > SVGA_HEIGHT) {
++                cp->timeperframe.denominator = 5;
++            }
 +        }
 +    }
  	
@@ -2446,7 +2575,7 @@
  	return 0;
  }
  
-@@ -3645,6 +5339,44 @@ static int sensor_g_chip_ident(struct v4
+@@ -3645,6 +5458,54 @@ static int sensor_g_chip_ident(struct v4
  	return v4l2_chip_ident_i2c_client(client, chip, V4L2_IDENT_SENSOR, 0);
  }
  
@@ -2472,6 +2601,12 @@
 +            nN_WIN_SIZES = (ARRAY_SIZE(sensor_win_sizes_hres2));
 +            sensor_win_sizes_ptr = sensor_win_sizes_hres2;
 +            sensor_default_regs_ptr = sensor_default_regs_hres2;
++        } else {
++            if (hres == 3) {
++                nN_WIN_SIZES = (ARRAY_SIZE(sensor_win_sizes_hres3));
++                sensor_win_sizes_ptr = sensor_win_sizes_hres3;
++                sensor_default_regs_ptr = sensor_default_regs_hres3;
++            }
 +        }
 +    }
 +    nsize = ARRAY_SIZE(sensor_default_regs_hres0);
@@ -2480,6 +2615,10 @@
 +    } else {
 +        if (hres == 2) {
 +            nsize = ARRAY_SIZE(sensor_default_regs_hres2);
++        } else {
++            if (hres == 3) {
++                nsize = ARRAY_SIZE(sensor_default_regs_hres3);
++            }
 +        }
 +    }
 +	ret = sensor_write_array(sd, sensor_default_regs_ptr , nsize);
@@ -2491,7 +2630,7 @@
  
  /* ----------------------------------------------------------------------- */
  
-@@ -3686,7 +5418,6 @@ static int sensor_probe(struct i2c_clien
+@@ -3686,7 +5547,6 @@ static int sensor_probe(struct i2c_clien
  {
  	struct v4l2_subdev *sd;
  	struct sensor_info *info;
@@ -2499,7 +2638,7 @@
  
  	info = kzalloc(sizeof(struct sensor_info), GFP_KERNEL);
  	if (info == NULL)
-@@ -3712,7 +5443,7 @@ static int sensor_probe(struct i2c_clien
+@@ -3712,7 +5572,7 @@ static int sensor_probe(struct i2c_clien
  	info->autowb = 1;
  	info->wb = 0;
  	info->clrfx = 0;
@@ -2508,7 +2647,7 @@
  
  	return 0;
  }
-@@ -3745,6 +5476,18 @@ static struct i2c_driver sensor_driver =
+@@ -3745,6 +5605,22 @@ static struct i2c_driver sensor_driver =
  };
  static __init int init_sensor(void)
  {
@@ -2520,6 +2659,10 @@
 +    if (hres == 2) {
 +        nMCLK = (34*1000*1000);
 +        nSENSOR_FRAME_RATE = 20;
++    } else {
++        if (hres == 3) {
++            nSENSOR_FRAME_RATE = 15;
++        }
 +    }
 +    if (frate) {
 +        nSENSOR_FRAME_RATE = frate;
@@ -2527,7 +2670,7 @@
  	return cci_dev_init_helper(&sensor_driver);
  }
  
-@@ -3755,4 +5498,3 @@ static __exit void exit_sensor(void)
+@@ -3755,4 +5631,3 @@ static __exit void exit_sensor(void)
  
  module_init(init_sensor);
  module_exit(exit_sensor);
