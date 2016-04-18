@@ -19,7 +19,7 @@
 static unsigned int hres = 0;
 module_param(hres, uint, 0);
 MODULE_PARM_DESC(hres,
-"hres=0 (640x480|1280x720|1600x1200 - 15 FPS), hres=1 (800x600|1600x1200 - 10 FPS), hres=2 (320x240|640x480|800x600 - 20 FPS) (default=0)");
+"hres=0 (640x480|1280x720|1600x1200 - 15 FPS), hres=1 (800x600|1600x1200 - 10 FPS), hres=2 (320x240|640x480|800x600 - 20 FPS), hres=3 (320x240|352x288|640x480 - 15 FPS) (default=0)");
 
 static unsigned int mclk = 0;
 module_param(mclk, uint, 0);
@@ -2392,7 +2392,7 @@ static struct regval_list sensor_qvga_regs_hres2[] =
 {0x98,0x20},
 };
 
-#if 0
+#if 1
 static struct regval_list sensor_default_regs_hres3[] =
 {
 	{0xfe, 0x80},
@@ -3196,6 +3196,17 @@ static struct regval_list sensor_default_regs_hres3[] =
   {0xfe , 0x00},
 #endif    
 };
+
+/* 1600x1200 UXGA,5fps*/
+static struct regval_list sensor_uxga_regs_hres3[] =
+{
+};
+
+/* 800x600 SVGA,15fps*/
+static struct regval_list sensor_svga_regs_hres3[] =
+{
+};
+
 
 /* 640x480 VGA,15fps*/
 static struct regval_list sensor_vga_regs_hres3[] =
@@ -4822,17 +4833,37 @@ sensor_win_sizes_hres2[] = {
 
 };
 
-#if 0
+#if 1
 static struct sensor_win_size 
 sensor_win_sizes_hres3[] = {
+  /* UXGA */
+  {
+    .width      = UXGA_WIDTH,
+    .height     = UXGA_HEIGHT,
+    .hoffset    = 0,
+    .voffset    = 0,
+    .regs       = sensor_uxga_regs_hres3,
+    .regs_size  = ARRAY_SIZE(sensor_uxga_regs_hres3),
+    .set_size   = NULL,
+  },
+  /* SVGA */
+  {
+    .width      = SVGA_WIDTH,
+    .height     = SVGA_HEIGHT,
+    .hoffset    = 0,
+    .voffset    = 0,
+    .regs       = sensor_svga_regs_hres3,
+    .regs_size  = ARRAY_SIZE(sensor_svga_regs_hres3),
+    .set_size   = NULL,
+  },
   /* VGA */
   {
     .width      = VGA_WIDTH,
     .height     = VGA_HEIGHT,
     .hoffset    = 0,
     .voffset    = 0,
-    .regs       = sensor_vga_regs_hres2,
-    .regs_size  = ARRAY_SIZE(sensor_vga_regs_hres2),
+    .regs       = sensor_vga_regs_hres3,
+    .regs_size  = ARRAY_SIZE(sensor_vga_regs_hres3),
     .set_size   = NULL,
   },
   /* CIF */
@@ -4841,8 +4872,8 @@ sensor_win_sizes_hres3[] = {
     .height     = CIF_HEIGHT,
     .hoffset    = 0,
     .voffset    = 0,
-    .regs       = sensor_qvga_regs_hres2,
-    .regs_size  = ARRAY_SIZE(sensor_qvga_regs_hres2),
+    .regs       = sensor_cif_regs_hres3,
+    .regs_size  = ARRAY_SIZE(sensor_qvga_regs_hres3),
     .set_size   = NULL,
   },  
   /* QVGA */
@@ -4851,8 +4882,8 @@ sensor_win_sizes_hres3[] = {
     .height     = QVGA_HEIGHT,
     .hoffset    = 0,
     .voffset    = 0,
-    .regs       = sensor_qvga_regs_hres2,
-    .regs_size  = ARRAY_SIZE(sensor_qvga_regs_hres2),
+    .regs       = sensor_qvga_regs_hres3,
+    .regs_size  = ARRAY_SIZE(sensor_qvga_regs_hres3),
     .set_size   = NULL,
   },
 };
@@ -4951,6 +4982,9 @@ static int sensor_g_mbus_config(struct v4l2_subdev *sd,
 /*
  * Set a format.
  */
+static unsigned char shutter_l = 0;
+static unsigned char shutter_h = 0;
+
 static int sensor_s_fmt(struct v4l2_subdev *sd, 
              struct v4l2_mbus_framefmt *fmt)//linux-3.0
 {
@@ -4970,7 +5004,15 @@ static int sensor_s_fmt(struct v4l2_subdev *sd,
 	if (ret)
 		return ret;
 
+#if 0
     if (hres == 0)  {
+        if ((wsize->width == VGA_WIDTH) && (wsize->height == VGA_HEIGHT)) {
+            nMCLK = (34*1000*1000);
+            nSENSOR_FRAME_RATE = 25;
+        }
+    }
+#endif    
+    if (hres == 1 || hres == 2)  {
         if ((wsize->width == UXGA_WIDTH) && (wsize->height == UXGA_HEIGHT)) {
             //	printk(" read  2035 exptime 11111111\n" );
             sensor_write(sd, 0xfe, 0x00);
@@ -5030,8 +5072,9 @@ static int sensor_s_fmt(struct v4l2_subdev *sd,
         if((wsize->width == UXGA_WIDTH) && (wsize->height == UXGA_HEIGHT))     {
             //printk(" write  2035 exptime 22222222\n" );
             sensor_write(sd, 0xfe, 0x00);
-            shutter= shutter /2;	// 2
-            if(shutter < 1) shutter = 1;
+            shutter= shutter / 2;	// 2
+            if(shutter < 1)
+               shutter = 1;
             val = ((shutter>>8)&0xff); 
              //  printk(" write0x03 = [%x]\n", regs.value[0]);
             sensor_write(sd, 0x03, val);
@@ -5045,6 +5088,76 @@ static int sensor_s_fmt(struct v4l2_subdev *sd,
              mdelay(50);//200
              sensor_write(sd, 0xb6, 0x03);  // AEC ON
              mdelay(300);
+             nSENSOR_FRAME_RATE = 8;
+        }
+    }
+    if (hres == 3) {
+        if ((wsize->width >= UXGA_WIDTH) && (wsize->height >= UXGA_HEIGHT))     {
+            sensor_write(sd, 0xfe, 0x01);
+            sensor_write(sd, 0x21, 0xdf);
+            sensor_write(sd, 0xfe, 0x00);
+            sensor_write(sd, 0xb6, 0x02);  // AEC OFF
+            sensor_read(sd, 0x03, &val);
+            shutter_l = val;
+            temp |= (val<< 8);
+            sensor_read(sd, 0x04, &val);
+            shutter_h = val;
+            temp |= (val & 0xff);
+            shutter=temp;
+            sensor_write(sd, 0xfe, 0x00);
+            sensor_write(sd, 0xc8, 0x00);
+            sensor_write(sd, 0xfa, 0x11);
+            sensor_write(sd, 0x90, 0x01);
+            sensor_write(sd, 0x95, 0x04);
+            sensor_write(sd, 0x96, 0xb2);
+            sensor_write(sd, 0x97, 0x06);
+            sensor_write(sd, 0x98, 0x40);
+            sensor_write(sd, 0x99, 0x11);
+            sensor_write(sd, 0x9a, 0x06);
+            sensor_write(sd, 0x9b, 0x00);
+            sensor_write(sd, 0x9e, 0x00);
+            sensor_write(sd, 0xa0, 0x00);
+            sensor_write(sd, 0xa1, 0x00);
+            sensor_write(sd, 0xa2, 0x00);
+            shutter= shutter / 2;	// 2
+            if(shutter < 1)
+               shutter = 1;
+            val = ((shutter>>8)&0xff); 
+             //  printk(" write0x03 = [%x]\n", regs.value[0]);
+            sensor_write(sd, 0x03, val);
+            val = (shutter&0xff); 
+            sensor_write(sd, 0x04, val);
+            nSENSOR_FRAME_RATE = 8;
+            mdelay(130);
+        } else {
+            sensor_write(sd, 0xfe, 0x01);
+            sensor_write(sd, 0x21, 0xbf);
+            sensor_write(sd, 0xfe, 0x00);
+            
+            sensor_write(sd, 0x03, shutter_l);
+            sensor_write(sd, 0x04, shutter_h);
+
+            sensor_write(sd, 0xb6, 0x03);
+            sensor_write(sd, 0xfa, 0x00);
+            sensor_write(sd, 0xc8, 0x00);
+            sensor_write(sd, 0x99, 0x22);
+            sensor_write(sd, 0x9a, 0x07);
+            sensor_write(sd, 0x9b, 0x00);
+            sensor_write(sd, 0x9c, 0x00);
+            sensor_write(sd, 0x9d, 0x00);
+            sensor_write(sd, 0x9e, 0x00);
+            sensor_write(sd, 0x9f, 0x00);
+
+            sensor_write(sd, 0xa1, 0x00);
+            sensor_write(sd, 0xa2, 0x00);
+            sensor_write(sd, 0x90, 0x01); // crop enable
+            sensor_write(sd, 0x94, 0x02);
+            sensor_write(sd, 0x95, 0x02);
+            sensor_write(sd, 0x96, 0x5a);
+            sensor_write(sd, 0x97, 0x03);
+            sensor_write(sd, 0x98, 0x22);
+            nSENSOR_FRAME_RATE = 15;
+            mdelay(50);
         }
     }
 #endif	
@@ -5080,6 +5193,12 @@ static int sensor_g_parm(struct v4l2_subdev *sd, struct v4l2_streamparm *parms)
     if (hres < 2) {
         if (info->width > SVGA_WIDTH && info->height > SVGA_HEIGHT) {
             cp->timeperframe.denominator = nSENSOR_FRAME_RATE/2;
+        }
+    } else {
+        if (hres == 3) {
+            if (info->width > SVGA_WIDTH && info->height > SVGA_HEIGHT) {
+                cp->timeperframe.denominator = 5;
+            }
         }
     }
 	
@@ -5361,6 +5480,12 @@ static int sensor_init(struct v4l2_subdev *sd, u32 val)
             nN_WIN_SIZES = (ARRAY_SIZE(sensor_win_sizes_hres2));
             sensor_win_sizes_ptr = sensor_win_sizes_hres2;
             sensor_default_regs_ptr = sensor_default_regs_hres2;
+        } else {
+            if (hres == 3) {
+                nN_WIN_SIZES = (ARRAY_SIZE(sensor_win_sizes_hres3));
+                sensor_win_sizes_ptr = sensor_win_sizes_hres3;
+                sensor_default_regs_ptr = sensor_default_regs_hres3;
+            }
         }
     }
     nsize = ARRAY_SIZE(sensor_default_regs_hres0);
@@ -5369,6 +5494,10 @@ static int sensor_init(struct v4l2_subdev *sd, u32 val)
     } else {
         if (hres == 2) {
             nsize = ARRAY_SIZE(sensor_default_regs_hres2);
+        } else {
+            if (hres == 3) {
+                nsize = ARRAY_SIZE(sensor_default_regs_hres3);
+            }
         }
     }
 	ret = sensor_write_array(sd, sensor_default_regs_ptr , nsize);
@@ -5484,6 +5613,10 @@ static __init int init_sensor(void)
     if (hres == 2) {
         nMCLK = (34*1000*1000);
         nSENSOR_FRAME_RATE = 20;
+    } else {
+        if (hres == 3) {
+            nSENSOR_FRAME_RATE = 15;
+        }
     }
     if (frate) {
         nSENSOR_FRAME_RATE = frate;
